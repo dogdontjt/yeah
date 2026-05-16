@@ -277,11 +277,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div id="t-history" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:6px;flex-wrap:wrap">
       <p style="font-size:14px;font-weight:500;color:#111">历史记录</p>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="openExportPanel()" style="font-size:12px;color:#0F6E56;background:none;border:1px solid #0F6E56;border-radius:6px;padding:4px 10px;cursor:pointer">📝 导出复习</button>
         <button onclick="exportHistory()" style="font-size:12px;color:#0066FF;background:none;border:1px solid #0066FF;border-radius:6px;padding:4px 10px;cursor:pointer">导出 JSON</button>
         <button onclick="cleanStorage()" style="font-size:12px;color:#FF6B00;background:none;border:1px solid #FF6B00;border-radius:6px;padding:4px 10px;cursor:pointer">清理存储</button>
       </div>
     </div>
+
+    <!-- 导出复习面板 -->
+    <div id="exportPanel" style="display:none;border:1px solid #0F6E56;background:#f0fff7;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <p style="font-size:13px;font-weight:500;color:#0F6E56">勾选要导出的日期</p>
+        <button onclick="document.getElementById('exportPanel').style.display='none'" style="background:none;border:none;color:#888;font-size:16px;cursor:pointer">×</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button onclick="toggleAllExport(true)" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;cursor:pointer">全选</button>
+        <button onclick="toggleAllExport(false)" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;cursor:pointer">全不选</button>
+        <button onclick="selectRecentExport(7)" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;cursor:pointer">最近7天</button>
+        <button onclick="selectRecentExport(30)" style="font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;cursor:pointer">最近30天</button>
+      </div>
+      <div id="exportDayList" style="max-height:300px;overflow-y:auto;background:#fff;border-radius:6px;border:1px solid #e5e5e5;padding:6px;margin-bottom:10px"></div>
+      <button onclick="doExportWord()" style="width:100%;padding:10px;background:#0F6E56;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer">生成 Word 文档</button>
+    </div>
+
     <div id="historyEmpty" style="text-align:center;padding:3rem;color:#888;font-size:13px">还没有历史记录</div>
     <div id="historyList"></div>
   </div>
@@ -873,6 +891,99 @@ function renderHistory(){
     return `<div class="hday"><div class="hday-h" onclick="document.getElementById('${id}').classList.toggle('open')"><div><span style="font-size:13px;font-weight:500;color:#111">${rec.date||'未知'}</span><span style="font-size:12px;color:#888;margin-left:8px">${tot} 条</span></div><span style="color:#ccc">▼</span></div><div class="hday-b" id="${id}">${body}</div></div>`;
   }).join('');
 }
+
+// ── 导出复习面板 ──
+function openExportPanel(){
+  const panel=document.getElementById('exportPanel');
+  panel.style.display='block';
+  renderExportDayList();
+}
+function renderExportDayList(){
+  const all=getAllHistory();
+  if(!all.length){document.getElementById('exportDayList').innerHTML='<p style="text-align:center;color:#888;padding:1rem;font-size:12px">还没有历史记录</p>';return;}
+  document.getElementById('exportDayList').innerHTML=all.map(rec=>{
+    const tot=(rec.vocab?.length||0)+(rec.grammar?.length||0)+(rec.phrases?.length||0);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer">
+      <input type="checkbox" class="expck" data-key="${rec._key}" checked style="width:14px;height:14px;accent-color:#0F6E56">
+      <span style="font-size:13px;color:#111;flex:1">${rec.date||rec._key.slice(4)}</span>
+      <span style="font-size:11px;color:#888">${tot} 条</span>
+    </label>`;
+  }).join('');
+}
+function toggleAllExport(state){
+  document.querySelectorAll('.expck').forEach(cb=>cb.checked=state);
+}
+function selectRecentExport(days){
+  const today=new Date();today.setHours(0,0,0,0);
+  document.querySelectorAll('.expck').forEach(cb=>{
+    const k=cb.dataset.key;const d=new Date(k.slice(4));d.setHours(0,0,0,0);
+    const diff=Math.round((today-d)/864e5);
+    cb.checked=(diff>=0&&diff<days);
+  });
+}
+function doExportWord(){
+  const keys=[...document.querySelectorAll('.expck:checked')].map(cb=>cb.dataset.key);
+  if(!keys.length){alert('请至少勾选一天');return;}
+  const all=getAllHistory().filter(r=>keys.includes(r._key));
+  // 统计
+  let totV=0,totG=0,totP=0;
+  all.forEach(r=>{totV+=r.vocab?.length||0;totG+=r.grammar?.length||0;totP+=r.phrases?.length||0;});
+  // 生成 HTML（Word 可以直接打开）
+  let html=`<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>drama复习材料</title>
+<style>
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;padding:20px;color:#222;line-height:1.7;font-size:12pt}
+h1{color:#0F6E56;font-size:22pt;margin-bottom:6px}
+h2{color:#0F6E56;font-size:16pt;border-bottom:2px solid #0F6E56;padding-bottom:4px;margin-top:24px}
+h3{color:#444;font-size:13pt;margin-top:16px;margin-bottom:8px;background:#f0f0f0;padding:4px 8px}
+.summary{background:#f0fff7;border:1px solid #c8ecd8;padding:10px;border-radius:6px;margin:10px 0}
+.item{margin:8px 0;padding:6px 10px;border-left:3px solid #0F6E56;background:#fafafa}
+.word{font-weight:bold;font-size:13pt;color:#111}
+.pos{color:#888;font-size:10pt;margin-left:6px}
+.meaning{color:#333;margin-top:3px}
+.example{color:#666;font-style:italic;margin-top:3px;font-size:11pt}
+.grammar-pt{font-weight:bold;color:#111}
+.grammar-orig{color:#0066FF;font-style:italic;margin:4px 0}
+.grammar-bd{color:#555;background:#f0fff4;padding:4px 8px;border-radius:4px;font-size:11pt}
+.date-tag{display:inline-block;background:#0F6E56;color:#fff;padding:2px 10px;border-radius:10px;font-size:11pt;margin-right:8px}
+</style></head><body>`;
+  html+=`<h1>🎬 drama 复习材料</h1>`;
+  html+=`<div class="summary">📅 时间范围：${all[all.length-1]?.date||'?'} ～ ${all[0]?.date||'?'}　|　📚 共 ${all.length} 天　|　生词 ${totV} 个　搭配 ${totP} 个　语法 ${totG} 条</div>`;
+  // 按类别汇总
+  html+=`<h2>📖 一、生词汇总（${totV}）</h2>`;
+  all.forEach(r=>{
+    if(!r.vocab?.length)return;
+    html+=`<h3><span class="date-tag">${r.date||r._key.slice(4)}</span>${r.vocab.length} 个生词</h3>`;
+    r.vocab.forEach(v=>{
+      html+=`<div class="item"><span class="word">${escapeHtml(v.word)}</span><span class="pos">${escapeHtml(v.pos||'')}</span><div class="meaning">${escapeHtml(v.meaning||'')}</div>${v.example?`<div class="example">"${escapeHtml(v.example)}"</div>`:''}${v.note?`<div class="meaning" style="color:#665;background:#fffbf0;padding:4px 8px;border-radius:4px;margin-top:4px">📝 ${escapeHtml(v.note)}</div>`:''}</div>`;
+    });
+  });
+  html+=`<h2 style="page-break-before:always">🔗 二、固定搭配（${totP}）</h2>`;
+  all.forEach(r=>{
+    if(!r.phrases?.length)return;
+    html+=`<h3><span class="date-tag">${r.date||r._key.slice(4)}</span>${r.phrases.length} 个搭配</h3>`;
+    r.phrases.forEach(p=>{
+      html+=`<div class="item"><span class="word">${escapeHtml(p.phrase)}</span><div class="meaning">${escapeHtml(p.meaning||'')}</div>${p.example?`<div class="example">"${escapeHtml(p.example)}"</div>`:''}${p.note?`<div class="meaning" style="color:#665;background:#fffbf0;padding:4px 8px;border-radius:4px;margin-top:4px">📝 ${escapeHtml(p.note)}</div>`:''}</div>`;
+    });
+  });
+  html+=`<h2 style="page-break-before:always">📐 三、语法精讲（${totG}）</h2>`;
+  all.forEach(r=>{
+    if(!r.grammar?.length)return;
+    html+=`<h3><span class="date-tag">${r.date||r._key.slice(4)}</span>${r.grammar.length} 条语法</h3>`;
+    r.grammar.forEach(g=>{
+      html+=`<div class="item"><div class="grammar-pt">${escapeHtml(g.point||'')}</div><div class="meaning">${escapeHtml(g.explanation||'')}</div>${g.original?`<div class="grammar-orig">「${escapeHtml(g.original)}」</div>`:''}${g.breakdown?`<div class="grammar-bd">${escapeHtml(g.breakdown)}</div>`:''}${g.note?`<div class="meaning" style="color:#665;background:#fffbf0;padding:4px 8px;border-radius:4px;margin-top:4px">📝 ${escapeHtml(g.note)}</div>`:''}</div>`;
+    });
+  });
+  html+=`</body></html>`;
+  // 下载（用 .doc 后缀，Word 能直接打开 HTML）
+  const blob=new Blob(['\ufeff',html],{type:'application/msword'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  const dateStr=new Date().toISOString().slice(0,10);
+  a.download=`drama复习_${dateStr}.doc`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function escapeHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 
 // ── API ──
 async function callDoubao(dataUrl){
