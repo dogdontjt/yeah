@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="drama">
+<meta name="theme-color" content="#ffffff">
+<title>drama</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;min-height:100vh;display:flex;justify-content:center;padding:env(safe-area-inset-top,12px) 12px env(safe-area-inset-bottom,12px)}
+.app{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:600px;box-shadow:0 2px 20px rgba(0,0,0,.08);align-self:flex-start;margin:8px 0}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px}
+.bv{background:#EEEDFE;color:#3C3489}.bg{background:#E1F5EE;color:#085041}.bp{background:#FAEEDA;color:#633806}
+.card{border:1px solid #eee;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fafafa}
+.wcard{border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.flip-wrap{width:100%;min-height:210px;perspective:1000px;cursor:pointer}
+.flip-inner{width:100%;min-height:210px;transition:transform .45s;transform-style:preserve-3d;position:relative}
+.flip-inner.flipped{transform:rotateY(180deg)}
+.flip-face{position:absolute;width:100%;min-height:210px;backface-visibility:hidden;border-radius:12px;border:1px solid #eee;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;background:#fff}
+.flip-back{transform:rotateY(180deg);background:#f9f9f9}
+.prog{height:4px;background:#eee;border-radius:2px;overflow:hidden;margin-bottom:.75rem}
+.prog-fill{height:100%;border-radius:2px;transition:width .3s;background:#0066FF}
+.rbtn{width:100%;padding:10px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;background:transparent}
+.rbtn.know{border:1px solid #0F6E56;color:#0F6E56}.rbtn.know:hover{background:#E1F5EE}
+.rbtn.unk{border:1px solid #993C1D;color:#993C1D}.rbtn.unk:hover{background:#FAECE7}
+.speak-btn{background:transparent;border:1px solid #ddd;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:#666;display:inline-flex;align-items:center;gap:3px;vertical-align:middle}
+.speak-btn:hover{background:#f0f0f0}.speak-btn.playing{color:#0066FF;border-color:#0066FF}
+.src-btn{background:transparent;border:1px solid #ddd;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:#888;display:inline-flex;align-items:center;vertical-align:middle}
+.key-box{background:#f5f5f7;border-radius:10px;padding:10px 14px;margin-bottom:1rem;border:1px solid #e5e5e5}
+.key-row{display:flex;gap:8px;margin-top:6px}
+.key-row input{flex:1;padding:7px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#111;font-size:13px}
+.key-row button{padding:7px 14px;border-radius:8px;background:#0066FF;border:none;color:#fff;font-size:12px;font-weight:500;cursor:pointer}
+.mode-tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.mode-demo{background:#FAEEDA;color:#633806}.mode-real{background:#E1F5EE;color:#085041}
+.nav{display:flex;gap:2px;border-bottom:1px solid #eee;margin-bottom:1.25rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-btn{background:transparent;border:none;padding:8px 12px;font-size:12px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab-btn.active{color:#111;border-bottom-color:#111}
+.subtitle-box{background:#f0f4ff;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.grammar-card{background:#f9fff9;border:1px solid #c8ecd8;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.phrase-card{background:#fffbf0;border:1px solid #f0dfa0;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.sec{font-size:11px;font-weight:600;color:#888;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+.primary-btn{display:block;width:100%;margin-top:10px;padding:11px;border-radius:8px;background:#0066FF;border:none;font-size:13px;font-weight:500;color:#fff;cursor:pointer;text-align:center}
+.primary-btn:hover{background:#0052cc}
+.img-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.img-modal.open{display:flex}
+.img-modal img{max-width:92vw;max-height:82vh;border-radius:8px}
+.img-modal-label{color:#fff;font-size:13px;opacity:.8}
+.checkbox-wrap{display:flex;align-items:flex-start;gap:10px}
+.checkbox-wrap input[type=checkbox]{width:16px;height:16px;margin-top:3px;cursor:pointer;accent-color:#0066FF;flex-shrink:0}
+.ebb-bar{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px;padding:12px 16px;margin-bottom:1rem;color:#fff}
+.bfbtn{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;color:#666;cursor:pointer}
+.bfbtn.active{border-color:#0066FF;color:#0066FF;background:#f0f4ff;font-weight:500}
+.bitem{border:1px solid #eee;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff;position:relative}
+.bitem .bdel{position:absolute;top:6px;right:8px;width:22px;height:22px;border-radius:50%;background:#f5f5f7;border:none;color:#999;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.bitem .bdel:hover{background:#FAECE7;color:#993C1D}
+.bitem .bnote{margin-top:6px;padding:6px 8px;background:#fffbf0;border:1px dashed #f0dfa0;border-radius:6px;font-size:12px;color:#665;cursor:text;min-height:18px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.bitem .bnote:empty:before{content:'＋ 添加笔记';color:#bbb;font-style:italic}
+.bitem .bmeta{font-size:11px;color:#aaa;margin-top:4px}
+.review-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;margin:3px;border:none;color:#fff;font-weight:500}
+.review-chip:hover{background:rgba(255,255,255,.35)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:#FFD700}
+.dot.urgent{background:#FF6B6B}
+.hday{border:1px solid #eee;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.hday-h{padding:10px 14px;background:#f9f9f9;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.hday-b{padding:10px 14px;display:none}
+.hday-b.open{display:block}
+.qitem{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;margin-bottom:4px;background:#f9f9f9;border:1px solid #eee;font-size:12px;cursor:pointer}
+.qdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.qdot.pending{background:#ccc}.qdot.running{background:#0066FF;animation:pulse 1s infinite}
+.qdot.done{background:#0F6E56}.qdot.error{background:#E24B4A}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.flex1{flex:1;min-width:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:20px">🎬</span>
+      <h1 style="font-size:16px;font-weight:600;color:#111">drama</h1>
+    </div>
+    <span id="todayLabel" style="font-size:11px;color:#aaa"></span>
+  </div>
+
+  <div id="ebbBar" style="display:none" class="ebb-bar">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px">📚 今日复习提醒</div>
+    <div id="ebbChips"></div>
+  </div>
+
+  <div class="key-box">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="row">
+        <p style="font-size:13px;font-weight:500;color:#111">豆包 API Key</p>
+        <span id="modeTag" class="mode-tag mode-demo">演示模式</span>
+      </div>
+      <a href="https://console.volcengine.com/ark" target="_blank" style="font-size:11px;color:#0066FF">控制台 →</a>
+    </div>
+    <div class="key-row">
+      <input type="password" id="keyInput" placeholder="ark-..." autocomplete="off">
+      <button onclick="saveKey()">保存</button>
+    </div>
+    <p style="font-size:11px;color:#888;margin-top:5px">模型：<code style="font-size:10px">doubao-1.5-vision-pro-32k-250115</code></p>
+  </div>
+
+  <div class="nav">
+    <button class="tab-btn active" onclick="go('upload')">截图分析</button>
+    <button class="tab-btn" onclick="go('daily')">今日汇总</button>
+    <button class="tab-btn" onclick="go('book')">单词本</button>
+    <button class="tab-btn" onclick="go('review')">闪卡复习</button>
+    <button class="tab-btn" onclick="go('history')">历史记录</button>
+  </div>
+
+  <!-- 截图分析 -->
+  <div id="t-upload">
+    <div id="uploadZone" style="border:1.5px dashed #ccc;border-radius:12px;padding:1.25rem;text-align:center;cursor:pointer" onclick="document.getElementById('fi').click()">
+      <div style="font-size:24px;margin-bottom:6px">📋</div>
+      <p style="font-size:15px;font-weight:600;color:#111">截图后直接粘贴</p>
+      <p style="font-size:13px;color:#0066FF;margin-top:3px;font-weight:500">Ctrl+V &nbsp;/&nbsp; ⌘V</p>
+      <p style="font-size:12px;color:#aaa;margin-top:6px">或点击选择图片（支持多选）</p>
+    </div>
+    <input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleFiles(event)">
+
+    <div id="queueArea" style="display:none;margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <p style="font-size:12px;font-weight:500;color:#555">分析队列</p>
+        <div style="display:flex;gap:8px;align-items:center">
+          <p style="font-size:11px;color:#aaa" id="queueSummary"></p>
+          <button onclick="resetQueue()" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer;text-decoration:underline">清空</button>
+        </div>
+      </div>
+      <div id="queueList"></div>
+    </div>
+
+    <div id="resArea" style="display:none;margin-top:1.25rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <p style="font-size:13px;font-weight:500;color:#555" id="resTitle">分析结果</p>
+        <div style="display:flex;gap:6px;align-items:center" id="resPager"></div>
+      </div>
+      <img id="fullThumb" style="width:100%;border-radius:10px;margin-bottom:10px;cursor:pointer;border:1px solid #eee;max-height:140px;object-fit:cover;display:none" onclick="openModal(this.src,'截图原图')">
+      <div id="subtitleRow" style="display:none" class="subtitle-box">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <p style="font-size:14px;font-style:italic;color:#111;flex:1;line-height:1.6" id="subtitleText"></p>
+          <button class="speak-btn" style="flex-shrink:0;margin-top:2px" onclick="speakText(document.getElementById('subtitleText').textContent,this)">▶ 朗读</button>
+        </div>
+        <p style="font-size:13px;color:#444;margin-top:8px;padding-top:8px;border-top:1px solid #dde4f5;line-height:1.7" id="translationText"></p>
+      </div>
+      <div id="vocabSec" style="display:none">
+        <div class="sec">生词 <span style="font-weight:400;font-size:11px;color:#aaa">— 勾选保存</span></div>
+        <div id="vocabList"></div>
+      </div>
+      <div id="grammarSec" style="display:none">
+        <div class="sec">语法分析</div>
+        <div id="grammarList"></div>
+      </div>
+      <div id="phraseSec" style="display:none">
+        <div class="sec">固定搭配 <span style="font-weight:400;font-size:11px;color:#aaa">— 勾选保存</span></div>
+        <div id="phraseList"></div>
+      </div>
+      <div style="position:relative;z-index:10;margin-top:12px">
+        <button class="primary-btn" id="saveBtn">保存勾选项到今日汇总</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今日汇总 -->
+  <div id="t-daily" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem">
+      <div style="background:#f5f5f7;border-radius:8px;padding:10px;text-align:center">
+        <p style="font-size:11px;color:#888;margin-bottom:3px">生词</p>
+        <p style="font-size:22px;font-weight:500;color:#111" id="cV">0</p>
+      </div>
+      <div style="background:#f5f5f7;border-radius:8px;padding:10px;text-align:center">
+        <p style="font-size:11px;color:#888;margin-bottom:3px">语法</p>
+        <p style="font-size:22px;font-weight:500;color:#111" id="cG">0</p>
+      </div>
+      <div style="background:#f5f5f7;border-radius:8px;padding:10px;text-align:center">
+        <p style="font-size:11px;color:#888;margin-bottom:3px">搭配</p>
+        <p style="font-size:22px;font-weight:500;color:#111" id="cP">0</p>
+      </div>
+    </div>
+    <div id="dEmpty" style="text-align:center;padding:2rem;color:#888;font-size:13px">还没有记录，分析截图后勾选保存</div>
+    <div id="dList"></div>
+    <div id="dBtn" style="display:none;margin-top:1.25rem">
+      <button class="primary-btn" onclick="startReview()">开始今日复习</button>
+    </div>
+  </div>
+
+  <!-- 闪卡复习 -->
+  <div id="t-review" style="display:none">
+    <div id="rEmpty" style="text-align:center;padding:3rem;color:#888;font-size:13px">先分析截图并保存生词，再来复习</div>
+    <div id="rMain" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <p style="font-size:13px;color:#888" id="rProg">1 / 1</p>
+        <div style="font-size:12px;display:flex;gap:8px">
+          <span style="color:#0F6E56" id="rKnow">已掌握 0</span>
+          <span style="color:#993C1D" id="rUnk">待复习 0</span>
+        </div>
+      </div>
+      <div class="prog"><div class="prog-fill" id="rBar" style="width:0%"></div></div>
+      <div class="flip-wrap" id="fc" onclick="doFlip()">
+        <div class="flip-inner" id="fi2">
+          <div class="flip-face">
+            <p style="font-size:11px;color:#888;margin-bottom:10px">点击翻转查看释义</p>
+            <div class="row">
+              <p style="font-size:28px;font-weight:500;color:#111" id="cWord"></p>
+              <button class="speak-btn" onclick="event.stopPropagation();speakText(document.getElementById('cWord').textContent,this)">▶</button>
+            </div>
+            <p style="font-size:12px;color:#888;margin-top:8px;text-align:center;font-style:italic;max-width:280px;line-height:1.6" id="cCtx"></p>
+            <button id="cSrcBtn" onclick="event.stopPropagation();showCardSrc()" style="display:none;margin-top:10px;background:transparent;border:1px solid #ddd;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;color:#888">📷 查看原图</button>
+          </div>
+          <div class="flip-face flip-back">
+            <p style="font-size:11px;color:#888;margin-bottom:4px" id="cPos"></p>
+            <p style="font-size:20px;font-weight:500;color:#111;margin-bottom:6px;text-align:center" id="cMean"></p>
+            <div class="row" style="justify-content:center">
+              <p style="font-size:12px;color:#888;font-style:italic;text-align:center;line-height:1.6" id="cEx"></p>
+              <button class="speak-btn" onclick="event.stopPropagation();speakText(document.getElementById('cEx').textContent,this)">▶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="rAct" style="display:none;margin-top:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="rbtn unk" onclick="mark(false)">还不熟</button>
+          <button class="rbtn know" onclick="mark(true)">已掌握</button>
+        </div>
+      </div>
+      <div id="rDone" style="display:none;text-align:center;padding:2rem">
+        <p style="font-size:16px;font-weight:500;color:#111;margin-bottom:8px">今日复习完成！🎉</p>
+        <p style="font-size:13px;color:#888;margin-bottom:1.5rem" id="rSum"></p>
+        <button class="primary-btn" onclick="again()">重复不熟的词</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 单词本 -->
+  <div id="t-book" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px;flex-wrap:wrap">
+      <p style="font-size:14px;font-weight:500;color:#111">单词本 <span id="bookCount" style="font-size:12px;color:#888;font-weight:400"></span></p>
+      <div style="display:flex;gap:4px" id="bookFilter">
+        <button class="bfbtn active" data-f="vocab" onclick="setBookFilter('vocab')">生词</button>
+        <button class="bfbtn" data-f="phrases" onclick="setBookFilter('phrases')">搭配</button>
+        <button class="bfbtn" data-f="grammar" onclick="setBookFilter('grammar')">语法</button>
+      </div>
+    </div>
+    <input id="bookSearch" type="text" placeholder="搜索单词、释义或笔记…" oninput="renderBook()" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:10px">
+    <div id="bookEmpty" style="text-align:center;padding:3rem;color:#888;font-size:13px;display:none">空空如也</div>
+    <div id="bookList"></div>
+  </div>
+
+  <!-- 历史记录 -->
+  <div id="t-history" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:6px;flex-wrap:wrap">
+      <p style="font-size:14px;font-weight:500;color:#111">历史记录</p>
+      <div style="display:flex;gap:6px">
+        <button onclick="exportHistory()" style="font-size:12px;color:#0066FF;background:none;border:1px solid #0066FF;border-radius:6px;padding:4px 10px;cursor:pointer">导出 JSON</button>
+        <button onclick="cleanStorage()" style="font-size:12px;color:#FF6B00;background:none;border:1px solid #FF6B00;border-radius:6px;padding:4px 10px;cursor:pointer">清理存储</button>
+      </div>
+    </div>
+    <div id="historyEmpty" style="text-align:center;padding:3rem;color:#888;font-size:13px">还没有历史记录</div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<div class="img-modal" id="imgModal" onclick="closeModal()">
+  <div class="img-modal-label" id="modalLabel"></div>
+  <img id="modalImg" src="">
+  <div style="color:#fff;font-size:12px;opacity:.5">点击任意处关闭</div>
+</div>
+
+<script>
+const MODEL='doubao-1.5-vision-pro-32k-250115';
+const EBB_DAYS=[1,2,4,7,15,30];
+const SYS=`你是英语学习助手，用户词汇量约4000词（高考水平）。分析美剧截图字幕，提取有价值的知识点。
+严格只返回如下JSON，不要任何其他文字或markdown：
+{"subtitle":"完整英文字幕原文，没有则为空","translation":"地道口语化中文翻译，像中文字幕组风格，不要逐字直译，没有字幕则为空","vocab":[{"word":"","pos":"","meaning":"","example":""}],"grammar":[{"point":"","explanation":"结合原句分析","original":"字幕原句","breakdown":"逐成分拆解"}],"phrases":[{"phrase":"","meaning":"","example":""}]}
+规则：1.vocab只提词汇量4000以上才遇到的词，跳过基础词 2.grammar必须引用原句分析时态/语态/句式 3.无字幕则各数组为空 4.vocab最多3个grammar最多2个phrases最多2个`;
+
+const MOCK={subtitle:"But he sends me a card, without fail, every single birthday.",translation:"但他每年我生日都会寄卡片来，一次都没落下过。",vocab:[{word:"without fail",pos:"adv.",meaning:"必定，从不例外",example:"He sends me a card, without fail, every single birthday."}],grammar:[{point:"插入语强调",explanation:"'without fail'作插入语夹在句中，强调动作的必然性",original:"But he sends me a card, without fail, every single birthday.",breakdown:"he sends me a card（主句）/ without fail（插入语）/ every single birthday（时间状语，single加强语气）"}],phrases:[{phrase:"without fail",meaning:"必定，从不例外",example:"He calls me every week, without fail."},{phrase:"every single",meaning:"每一个（强调无一例外）",example:"Every single day, she practices."}]};
+
+let apiKey=localStorage.getItem('doubao_key')||'';
+let currentUtter=null,flipped=false;
+let cards=[],idx=0,knows=new Set(),unks=new Set();
+let Q=[],curQIdx=-1,curResIdx=-1,curRenderedItem=null;
+
+// ── IndexedDB ──
+const IMG_DB='dramaImgs',IMG_STORE='imgs';
+let _imgDB=null;
+function openImgDB(){
+  return new Promise((res,rej)=>{
+    if(_imgDB){res(_imgDB);return;}
+    const req=indexedDB.open(IMG_DB,1);
+    req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(IMG_STORE))db.createObjectStore(IMG_STORE);};
+    req.onsuccess=e=>{_imgDB=e.target.result;res(_imgDB);};
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function putImg(id,dataUrl){try{const db=await openImgDB();return new Promise((res,rej)=>{const tx=db.transaction(IMG_STORE,'readwrite');tx.objectStore(IMG_STORE).put(dataUrl,id);tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);});}catch(e){console.error('putImg',e);}}
+async function getImg(id){try{const db=await openImgDB();return new Promise((res,rej)=>{const tx=db.transaction(IMG_STORE,'readonly');const r=tx.objectStore(IMG_STORE).get(id);r.onsuccess=()=>res(r.result||null);r.onerror=e=>rej(e.target.error);});}catch{return null;}}
+async function delImg(id){try{const db=await openImgDB();return new Promise(res=>{const tx=db.transaction(IMG_STORE,'readwrite');tx.objectStore(IMG_STORE).delete(id);tx.oncomplete=res;tx.onerror=res;});}catch{}}
+async function listImgIds(){try{const db=await openImgDB();return new Promise(res=>{const tx=db.transaction(IMG_STORE,'readonly');const r=tx.objectStore(IMG_STORE).getAllKeys();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>res([]);});}catch{return[];}}
+function newImgId(){return'img_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);}
+function isDataUrl(s){return typeof s==='string'&&s.startsWith('data:');}
+
+// ── 存储 ──
+const todayKey=()=>'day_'+new Date().toISOString().slice(0,10);
+function loadToday(){try{return JSON.parse(localStorage.getItem(todayKey()))||newDay();}catch{return newDay();}}
+function newDay(){return{vocab:[],grammar:[],phrases:[],date:todayKey().slice(4)};}
+function saveToday(){try{localStorage.setItem(todayKey(),JSON.stringify(daily));}catch(e){alert('存储空间不足，建议导出备份后清空旧数据。');}}
+let daily=loadToday();
+
+// 迁移旧版 base64 图片到 IndexedDB
+async function migrateOldImages(){
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith('day_'));
+  let migrated=0;
+  for(const k of keys){
+    try{
+      const r=JSON.parse(localStorage.getItem(k));if(!r)continue;
+      let changed=false;
+      for(const arr of[r.vocab||[],r.phrases||[]]){
+        for(const item of arr){
+          if(item.src&&isDataUrl(item.src)){
+            const id=newImgId();await putImg(id,item.src);item.src=id;changed=true;migrated++;
+          }
+        }
+      }
+      if(changed)try{localStorage.setItem(k,JSON.stringify(r));}catch{}
+    }catch{}
+  }
+  if(migrated>0){daily=loadToday();refreshDaily();}
+}
+
+// ── 初始化 ──
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('zh-CN');
+  if(apiKey)setRealMode();
+  refreshDaily();checkEbb();
+  migrateOldImages().catch(()=>{});
+  document.getElementById('saveBtn').addEventListener('click',saveSelected);
+  document.addEventListener('click',e=>{
+    const wrap=e.target.closest('.checkbox-wrap');
+    if(!wrap)return;
+    if(e.target.tagName==='INPUT'||e.target.closest('button'))return;
+    const cb=wrap.querySelector('input[type=checkbox]');
+    if(cb)cb.checked=!cb.checked;
+  });
+  // 注册 Service Worker
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+});
+
+function setRealMode(){
+  document.getElementById('modeTag').textContent='真实模式';
+  document.getElementById('modeTag').className='mode-tag mode-real';
+  document.getElementById('keyInput').placeholder='Key已保存（可更新）';
+}
+function saveKey(){
+  const v=document.getElementById('keyInput').value.trim();if(!v)return;
+  apiKey=v;localStorage.setItem('doubao_key',v);
+  setRealMode();document.getElementById('keyInput').value='';
+  alert('✅ Key已保存！');
+}
+
+// ── 粘贴 ──
+document.addEventListener('paste',e=>{
+  for(const item of(e.clipboardData?.items||[])){
+    if(item.type.startsWith('image/')){e.preventDefault();addToQueue([item.getAsFile()]);break;}
+  }
+});
+
+// ── Tab ──
+function go(name){
+  ['upload','daily','book','review','history'].forEach(t=>document.getElementById('t-'+t).style.display=t===name?'block':'none');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['upload','daily','book','review','history'][i]===name));
+  if(name==='history')renderHistory();
+  if(name==='book')renderBook();
+}
+
+// ── Modal ──
+async function openModal(src,label=''){
+  document.getElementById('modalLabel').textContent=label;
+  document.getElementById('imgModal').classList.add('open');
+  const imgEl=document.getElementById('modalImg');
+  if(!src){imgEl.src='';return;}
+  if(isDataUrl(src)){imgEl.src=src;return;}
+  imgEl.src='';
+  const dataUrl=await getImg(src);
+  imgEl.src=dataUrl||(imgEl.alt='图片不可用','');
+}
+function closeModal(){document.getElementById('imgModal').classList.remove('open');}
+
+// ── 语音 ──
+function speakText(text,btn){
+  if(!text?.trim())return;
+  window.speechSynthesis.cancel();
+  if(currentUtter&&btn.classList.contains('playing')){btn.classList.remove('playing');currentUtter=null;return;}
+  document.querySelectorAll('.speak-btn.playing').forEach(b=>b.classList.remove('playing'));
+  const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=0.88;
+  u.onend=u.onerror=()=>{btn.classList.remove('playing');currentUtter=null;};
+  currentUtter=u;btn.classList.add('playing');window.speechSynthesis.speak(u);
+}
+
+// ── 上传队列 ──
+function handleFiles(e){const files=[...e.target.files];if(files.length)addToQueue(files);e.target.value='';}
+async function addToQueue(files){
+  go('upload');
+  for(const f of files){
+    const entry={file:f,imgSrc:null,status:'pending',data:null,name:f.name||'截图'+(Q.length+1)};
+    Q.push(entry);
+    try{entry.imgSrc=await readFile(f);}catch(e){entry.status='error';entry.error='读取失败:'+e.message;}
+  }
+  renderQueue();
+  if(curQIdx===-1||Q[curQIdx]?.status==='done'||Q[curQIdx]?.status==='error')runQueue();
+}
+function resetQueue(){
+  Q=[];curQIdx=-1;curResIdx=-1;curRenderedItem=null;
+  document.getElementById('queueArea').style.display='none';
+  document.getElementById('resArea').style.display='none';
+  document.getElementById('uploadZone').style.display='block';
+}
+function renderQueue(){
+  if(!Q.length){document.getElementById('queueArea').style.display='none';return;}
+  document.getElementById('uploadZone').style.display='none';
+  document.getElementById('queueArea').style.display='block';
+  const done=Q.filter(q=>q.status==='done').length;
+  document.getElementById('queueSummary').textContent=`${done}/${Q.length} 完成`;
+  document.getElementById('queueList').innerHTML=Q.map((q,i)=>`
+    <div class="qitem" onclick="showResult(${i})">
+      <div class="qdot ${q.status}"></div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${q.status==='done'?'#111':'#888'}">${q.name}</span>
+      <span style="color:#aaa;font-size:11px">${{pending:'待分析',running:'分析中…',done:'完成',error:'失败'}[q.status]}</span>
+      ${q.status==='error'?`<button onclick="event.stopPropagation();retryItem(${i})" style="font-size:11px;color:#0066FF;background:none;border:1px solid #0066FF;border-radius:4px;padding:2px 8px;cursor:pointer">重试</button>`:''}
+    </div>`).join('');
+}
+function retryItem(i){
+  const item=Q[i];if(!item)return;
+  item.status='pending';item.error=null;item.data=null;
+  renderQueue();
+  if(curQIdx===-1||Q[curQIdx]?.status==='done'||Q[curQIdx]?.status==='error')runQueue();
+}
+async function runQueue(){
+  for(let i=0;i<Q.length;i++){
+    const item=Q[i];if(item.status!=='pending')continue;
+    curQIdx=i;item.status='running';renderQueue();
+    try{
+      if(!item.imgSrc)throw new Error('图片读取失败');
+      item.data=apiKey?await callDoubao(item.imgSrc):(await delay(1200),deepCopy(MOCK));
+      item.status='done';
+    }catch(e){item.status='error';item.error=e.message||String(e);}
+    renderQueue();showResult(i);
+  }
+}
+function showResult(i){
+  const item=Q[i];if(!item||item.status!=='done')return;
+  curResIdx=i;curRenderedItem=item;
+  const doneIdxs=Q.map((q,j)=>q.status==='done'?j:-1).filter(j=>j>=0);
+  const pos=doneIdxs.indexOf(i);
+  document.getElementById('resPager').innerHTML=doneIdxs.length>1
+    ?`<span style="font-size:12px;color:#888">${pos+1}/${doneIdxs.length}</span>
+      <button onclick="navigate(-1)" style="font-size:12px;border:1px solid #ddd;border-radius:4px;padding:2px 8px;cursor:pointer;background:none">‹</button>
+      <button onclick="navigate(1)" style="font-size:12px;border:1px solid #ddd;border-radius:4px;padding:2px 8px;cursor:pointer;background:none">›</button>`:'';
+  document.getElementById('resTitle').textContent=item.name;
+  renderResult(item.data,item.imgSrc);
+  document.getElementById('resArea').style.display='block';
+}
+function navigate(dir){
+  const doneIdxs=Q.map((q,j)=>q.status==='done'?j:-1).filter(j=>j>=0);
+  const next=doneIdxs[doneIdxs.indexOf(curResIdx)+dir];
+  if(next!=null)showResult(next);
+}
+function renderResult(d,imgSrc){
+  const ft=document.getElementById('fullThumb');
+  ft.style.display=imgSrc?'block':'none';
+  if(imgSrc)ft.src=imgSrc;
+
+  if(d.subtitle){
+    document.getElementById('subtitleText').textContent=d.subtitle;
+    document.getElementById('translationText').textContent=d.translation||'';
+    document.getElementById('subtitleRow').style.display='block';
+  }else document.getElementById('subtitleRow').style.display='none';
+
+  const vl=document.getElementById('vocabList');vl.innerHTML='';
+  document.getElementById('vocabSec').style.display=d.vocab?.length?'block':'none';
+  (d.vocab||[]).forEach((v,i)=>{
+    vl.innerHTML+=`<div class="card"><div class="checkbox-wrap">
+      <input type="checkbox" class="vcb" data-i="${i}" checked>
+      <div style="flex:1">
+        <div class="row" style="margin-bottom:4px">
+          <strong style="font-size:15px;color:#111">${v.word}</strong><span class="badge bv">${v.pos}</span>
+          <button class="speak-btn" onclick="speakText('${esc(v.word)}',this)">▶</button>
+          ${imgSrc?`<button class="src-btn" onclick="openModal('${esc(imgSrc)}','${esc(v.word)} 来源')">📷</button>`:''}
+        </div>
+        <p style="font-size:13px;color:#333;margin-bottom:3px">${v.meaning}</p>
+        <p style="font-size:12px;color:#888;font-style:italic">${v.example||''}</p>
+      </div></div></div>`;
+  });
+
+  const gl=document.getElementById('grammarList');gl.innerHTML='';
+  document.getElementById('grammarSec').style.display=d.grammar?.length?'block':'none';
+  (d.grammar||[]).forEach(g=>{
+    gl.innerHTML+=`<div class="grammar-card">
+      <div style="margin-bottom:6px"><span class="badge bg">${g.point}</span></div>
+      <p style="font-size:12px;color:#555;margin-bottom:5px;line-height:1.6">${g.explanation}</p>
+      <p style="font-size:12px;color:#0066FF;font-style:italic;margin-bottom:5px">「${g.original||''}」</p>
+      <p style="font-size:12px;color:#666;line-height:1.6;background:#f0fff4;border-radius:6px;padding:6px 8px">${g.breakdown||''}</p></div>`;
+  });
+
+  const pl=document.getElementById('phraseList');pl.innerHTML='';
+  document.getElementById('phraseSec').style.display=d.phrases?.length?'block':'none';
+  (d.phrases||[]).forEach((p,i)=>{
+    pl.innerHTML+=`<div class="phrase-card"><div class="checkbox-wrap">
+      <input type="checkbox" class="pcb" data-i="${i}" checked>
+      <div style="flex:1">
+        <div class="row" style="margin-bottom:4px">
+          <strong style="font-size:14px;color:#111">${p.phrase}</strong><span class="badge bp">搭配</span>
+          <button class="speak-btn" onclick="speakText('${esc(p.phrase)}',this)">▶</button>
+          ${imgSrc?`<button class="src-btn" onclick="openModal('${esc(imgSrc)}','${esc(p.phrase)} 来源')">📷</button>`:''}
+        </div>
+        <p style="font-size:13px;color:#333;margin-bottom:3px">${p.meaning}</p>
+        <p style="font-size:12px;color:#888;font-style:italic">${p.example||''}</p>
+      </div></div></div>`;
+  });
+}
+
+function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+// ── 保存 ──
+async function saveSelected(){
+  const item=curRenderedItem;
+  if(!item?.data){alert('没有分析结果可保存');return;}
+  const d=item.data,imgDataUrl=item.imgSrc||'';
+  let imgId='';
+  if(imgDataUrl&&isDataUrl(imgDataUrl)){imgId=newImgId();await putImg(imgId,imgDataUrl);}
+  else if(imgDataUrl)imgId=imgDataUrl;
+  let saved=0,skipped=0;
+  document.querySelectorAll('.vcb').forEach(cb=>{
+    const v=d.vocab?.[+cb.dataset.i];
+    if(cb.checked&&v){if(!daily.vocab.find(x=>x.word===v.word)){daily.vocab.push({...v,src:imgId});saved++;}else skipped++;}
+  });
+  (d.grammar||[]).forEach(g=>{if(!daily.grammar.find(x=>x.point===g.point)){daily.grammar.push(g);saved++;}else skipped++;});
+  document.querySelectorAll('.pcb').forEach(cb=>{
+    const p=d.phrases?.[+cb.dataset.i];
+    if(cb.checked&&p){if(!daily.phrases.find(x=>x.phrase===p.phrase)){daily.phrases.push({...p,src:imgId});saved++;}else skipped++;}
+  });
+  saveToday();refreshDaily();go('daily');
+}
+
+// ── 今日汇总 ──
+function deleteItem(type,key){
+  if(type==='v')daily.vocab=daily.vocab.filter(x=>x.word!==key);
+  else if(type==='g')daily.grammar=daily.grammar.filter(x=>x.point!==key);
+  else daily.phrases=daily.phrases.filter(x=>x.phrase!==key);
+  saveToday();refreshDaily();
+}
+function refreshDaily(){
+  document.getElementById('cV').textContent=daily.vocab.length;
+  document.getElementById('cG').textContent=daily.grammar.length;
+  document.getElementById('cP').textContent=daily.phrases.length;
+  const tot=daily.vocab.length+daily.grammar.length+daily.phrases.length;
+  document.getElementById('dEmpty').style.display=tot?'none':'block';
+  document.getElementById('dBtn').style.display=(daily.vocab.length+daily.phrases.length)?'block':'none';
+  let h='';
+  if(daily.vocab.length){
+    h+='<p class="sec">生词</p>';
+    daily.vocab.forEach(v=>{h+=`<div class="wcard" style="display:flex;align-items:center;gap:8px;cursor:${v.src?'pointer':'default'}" onclick="${v.src?`openModal('${esc(v.src)}','${esc(v.word)} 来源')`:'void(0)'}">
+      <div class="flex1 row"><span style="font-size:14px;font-weight:500;color:#111;white-space:nowrap">${v.word}</span><span style="font-size:11px;color:#888">${v.pos}</span>
+      <button class="speak-btn" onclick="event.stopPropagation();speakText('${esc(v.word)}',this)">▶</button>${v.src?'<span style="font-size:10px;color:#bbb">📷</span>':''}</div>
+      <span style="font-size:12px;color:#888;flex-shrink:0">${v.meaning}</span>
+      <button onclick="event.stopPropagation();deleteItem('v','${esc(v.word)}')" style="color:#ccc;background:none;border:none;cursor:pointer;font-size:16px;flex-shrink:0;padding:0">×</button></div>`;});
+  }
+  if(daily.grammar.length){
+    h+='<p class="sec">语法</p>';
+    daily.grammar.forEach(g=>{h+=`<div class="wcard" style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1"><p style="font-size:13px;font-weight:500;color:#111;margin-bottom:3px">${g.point}</p><p style="font-size:12px;color:#888">${g.explanation}</p></div>
+      <button onclick="deleteItem('g','${esc(g.point)}')" style="color:#ccc;background:none;border:none;cursor:pointer;font-size:16px;flex-shrink:0;padding:0">×</button></div>`;});
+  }
+  if(daily.phrases.length){
+    h+='<p class="sec">固定搭配</p>';
+    daily.phrases.forEach(p=>{h+=`<div class="wcard" style="display:flex;align-items:center;gap:8px;cursor:${p.src?'pointer':'default'}" onclick="${p.src?`openModal('${esc(p.src)}','${esc(p.phrase)} 来源')`:'void(0)'}">
+      <div class="flex1 row"><span style="font-size:14px;font-weight:500;color:#111;white-space:nowrap">${p.phrase}</span>
+      <button class="speak-btn" onclick="event.stopPropagation();speakText('${esc(p.phrase)}',this)">▶</button>${p.src?'<span style="font-size:10px;color:#bbb">📷</span>':''}</div>
+      <span style="font-size:12px;color:#888;flex-shrink:0">${p.meaning}</span>
+      <button onclick="event.stopPropagation();deleteItem('p','${esc(p.phrase)}')" style="color:#ccc;background:none;border:none;cursor:pointer;font-size:16px;flex-shrink:0;padding:0">×</button></div>`;});
+  }
+  document.getElementById('dList').innerHTML=h;
+}
+
+// ── 闪卡 ──
+function startReview(){
+  cards=[...daily.vocab.map(v=>({front:v.word,back:v.meaning,pos:v.pos,ex:v.example||'',src:v.src||''})),...daily.phrases.map(p=>({front:p.phrase,back:p.meaning,pos:'固定搭配',ex:p.example||'',src:p.src||''}))].sort(()=>Math.random()-.5);
+  if(!cards.length)return;
+  idx=0;knows=new Set();unks=new Set();flipped=false;
+  ['rEmpty','rDone'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('rMain').style.display='block';
+  document.getElementById('fc').style.display='block';
+  document.getElementById('rAct').style.display='none';
+  go('review');showCard();
+}
+function showCard(){
+  if(idx>=cards.length){showDone();return;}
+  const c=cards[idx];
+  document.getElementById('cWord').textContent=c.front;
+  document.getElementById('cCtx').textContent=c.ex;
+  document.getElementById('cPos').textContent=c.pos;
+  document.getElementById('cMean').textContent=c.back;
+  document.getElementById('cEx').textContent=c.ex;
+  document.getElementById('cSrcBtn').style.display=c.src?'inline-flex':'none';
+  document.getElementById('fi2').classList.remove('flipped');
+  document.getElementById('rAct').style.display='none';
+  document.querySelectorAll('.speak-btn.playing').forEach(b=>b.classList.remove('playing'));
+  flipped=false;
+  document.getElementById('rBar').style.width=Math.round(idx/cards.length*100)+'%';
+  document.getElementById('rProg').textContent=(idx+1)+' / '+cards.length;
+  document.getElementById('rKnow').textContent='已掌握 '+knows.size;
+  document.getElementById('rUnk').textContent='待复习 '+unks.size;
+}
+function showCardSrc(){const c=cards[idx];if(c?.src)openModal(c.src,c.front+' 来源截图');}
+function doFlip(){if(flipped)return;document.getElementById('fi2').classList.add('flipped');document.getElementById('rAct').style.display='block';flipped=true;}
+function mark(k){
+  window.speechSynthesis.cancel();
+  if(k)knows.add(cards[idx].front);else unks.add(cards[idx].front);
+  idx++;showCard();
+}
+function showDone(){
+  document.getElementById('fc').style.display='none';document.getElementById('rAct').style.display='none';
+  document.getElementById('rDone').style.display='block';document.getElementById('rBar').style.width='100%';
+  document.getElementById('rSum').textContent='已掌握 '+knows.size+' 个，还需复习 '+unks.size+' 个';
+}
+function again(){
+  cards=cards.filter(c=>unks.has(c.front));
+  if(!cards.length){document.getElementById('rSum').textContent='全部掌握了！';return;}
+  idx=0;knows=new Set();unks=new Set();flipped=false;
+  document.getElementById('rDone').style.display='none';document.getElementById('fc').style.display='block';showCard();
+}
+
+// ── 艾宾浩斯 ──
+function checkEbb(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const due=[];
+  Object.keys(localStorage).filter(k=>k.startsWith('day_')).forEach(k=>{
+    const d=new Date(k.slice(4));d.setHours(0,0,0,0);
+    const diff=Math.round((today-d)/864e5);
+    if(diff>0&&EBB_DAYS.includes(diff)){
+      try{const r=JSON.parse(localStorage.getItem(k));const cnt=(r.vocab?.length||0)+(r.phrases?.length||0);if(cnt>0)due.push({diff,cnt,key:k});}catch{}
+    }
+  });
+  if(!due.length)return;
+  document.getElementById('ebbChips').innerHTML=due.map(d=>`<button class="review-chip" onclick="startEbbReview('${d.key}')"><span class="dot${d.diff===1?' urgent':''}"></span>${d.diff===1?'昨天':d.diff+'天前'}（${d.cnt}词）</button>`).join('');
+  document.getElementById('ebbBar').style.display='block';
+}
+function startEbbReview(key){
+  try{
+    const r=JSON.parse(localStorage.getItem(key));
+    cards=[...(r.vocab||[]).map(v=>({front:v.word,back:v.meaning,pos:v.pos,ex:v.example||'',src:v.src||''})),...(r.phrases||[]).map(p=>({front:p.phrase,back:p.meaning,pos:'固定搭配',ex:p.example||'',src:p.src||''}))].sort(()=>Math.random()-.5);
+    if(!cards.length)return;
+    idx=0;knows=new Set();unks=new Set();flipped=false;
+    ['rEmpty','rDone'].forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('rMain').style.display='block';
+    document.getElementById('fc').style.display='block';
+    document.getElementById('rAct').style.display='none';
+    go('review');showCard();
+  }catch{alert('加载失败');}
+}
+
+// ── 单词本 ──
+let bookFilter='vocab';
+function setBookFilter(f){bookFilter=f;document.querySelectorAll('.bfbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderBook();}
+function collectBookItems(type){
+  const items=[];
+  Object.keys(localStorage).filter(k=>k.startsWith('day_')).sort().reverse().forEach(k=>{
+    try{const r=JSON.parse(localStorage.getItem(k));if(!r)return;(r[type]||[]).forEach((it,idx)=>{items.push({...it,_key:k,_idx:idx,_date:r.date||k.slice(4)});});}catch{}
+  });
+  return items;
+}
+function renderBook(){
+  const items=collectBookItems(bookFilter);
+  const q=(document.getElementById('bookSearch')?.value||'').trim().toLowerCase();
+  const filtered=q?items.filter(it=>{
+    const h=bookFilter==='vocab'?`${it.word} ${it.meaning} ${it.example||''} ${it.note||''}`:
+             bookFilter==='phrases'?`${it.phrase} ${it.meaning} ${it.example||''} ${it.note||''}`:
+             `${it.point} ${it.explanation} ${it.original||''} ${it.note||''}`;
+    return h.toLowerCase().includes(q);
+  }):items;
+  document.getElementById('bookCount').textContent=`(${filtered.length}${q?'/'+items.length:''})`;
+  document.getElementById('bookEmpty').style.display=filtered.length?'none':'block';
+  document.getElementById('bookList').innerHTML=filtered.map(renderBookItem).join('');
+}
+function renderBookItem(it){
+  const key=it._key,idx=it._idx,date=it._date;
+  if(bookFilter==='vocab')return `<div class="bitem">
+    <button class="bdel" onclick="deleteBookItem('${key}','vocab',${idx})">×</button>
+    <div class="row" style="padding-right:24px">
+      <strong style="font-size:15px;color:#111">${it.word}</strong><span class="badge bv">${it.pos||''}</span>
+      <button class="speak-btn" onclick="speakText('${esc(it.word)}',this)">▶</button>
+      ${it.src?`<button class="src-btn" onclick="openModal('${esc(it.src)}','${esc(it.word)} 来源')">📷</button>`:''}
+    </div>
+    <p style="font-size:13px;color:#333;margin-top:4px">${it.meaning||''}</p>
+    ${it.example?`<p style="font-size:12px;color:#888;font-style:italic;margin-top:2px">${it.example}</p>`:''}
+    <div class="bnote" contenteditable="true" onblur="updateBookNote('${key}','vocab',${idx},this.innerText)">${it.note||''}</div>
+    <div class="bmeta">${date}</div></div>`;
+  if(bookFilter==='phrases')return `<div class="bitem">
+    <button class="bdel" onclick="deleteBookItem('${key}','phrases',${idx})">×</button>
+    <div class="row" style="padding-right:24px">
+      <strong style="font-size:15px;color:#111">${it.phrase}</strong><span class="badge bp">搭配</span>
+      <button class="speak-btn" onclick="speakText('${esc(it.phrase)}',this)">▶</button>
+      ${it.src?`<button class="src-btn" onclick="openModal('${esc(it.src)}','${esc(it.phrase)} 来源')">📷</button>`:''}
+    </div>
+    <p style="font-size:13px;color:#333;margin-top:4px">${it.meaning||''}</p>
+    ${it.example?`<p style="font-size:12px;color:#888;font-style:italic;margin-top:2px">${it.example}</p>`:''}
+    <div class="bnote" contenteditable="true" onblur="updateBookNote('${key}','phrases',${idx},this.innerText)">${it.note||''}</div>
+    <div class="bmeta">${date}</div></div>`;
+  return `<div class="bitem">
+    <button class="bdel" onclick="deleteBookItem('${key}','grammar',${idx})">×</button>
+    <p style="font-size:14px;font-weight:500;color:#111;padding-right:24px">${it.point||''}</p>
+    <p style="font-size:12px;color:#555;margin-top:4px;line-height:1.5">${it.explanation||''}</p>
+    ${it.original?`<p style="font-size:12px;color:#0066FF;font-style:italic;margin-top:4px">「${it.original}」</p>`:''}
+    ${it.breakdown?`<p style="font-size:12px;color:#888;margin-top:2px;line-height:1.5">${it.breakdown}</p>`:''}
+    <div class="bnote" contenteditable="true" onblur="updateBookNote('${key}','grammar',${idx},this.innerText)">${it.note||''}</div>
+    <div class="bmeta">${date}</div></div>`;
+}
+function deleteBookItem(key,type,idx){
+  if(!confirm('确定删除？'))return;
+  try{const r=JSON.parse(localStorage.getItem(key));if(!r||!r[type])return;r[type].splice(idx,1);localStorage.setItem(key,JSON.stringify(r));if(key===todayKey()){daily=loadToday();refreshDaily();}renderBook();}catch(e){alert('删除失败：'+e.message);}
+}
+function updateBookNote(key,type,idx,text){
+  try{const r=JSON.parse(localStorage.getItem(key));if(!r||!r[type]||!r[type][idx])return;const t=text.trim();if(t)r[type][idx].note=t;else delete r[type][idx].note;localStorage.setItem(key,JSON.stringify(r));if(key===todayKey()){daily=loadToday();refreshDaily();}}catch{}
+}
+
+// ── 历史记录 ──
+function getAllHistory(){return Object.keys(localStorage).filter(k=>k.startsWith('day_')).sort().reverse().map(k=>{try{const r=JSON.parse(localStorage.getItem(k));if(r)r._key=k;return r;}catch{return null;}}).filter(Boolean);}
+function exportHistory(){
+  const blob=new Blob([JSON.stringify(getAllHistory(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='drama_history.json';a.click();
+}
+async function cleanStorage(){
+  if(!confirm('清理存储：迁移旧图片到IndexedDB，删除孤儿图片。文字数据保留。继续？'))return;
+  await migrateOldImages();
+  const used=new Set();
+  Object.keys(localStorage).filter(k=>k.startsWith('day_')).forEach(k=>{
+    try{const r=JSON.parse(localStorage.getItem(k));if(!r)return;
+      (r.vocab||[]).forEach(v=>v.src&&!isDataUrl(v.src)&&used.add(v.src));
+      (r.phrases||[]).forEach(p=>p.src&&!isDataUrl(p.src)&&used.add(p.src));
+    }catch{}
+  });
+  const allIds=await listImgIds();let removed=0;
+  for(const id of allIds){if(!used.has(id)){await delImg(id);removed++;}}
+  alert(`清理完成：删除 ${removed} 张孤儿图片，保留 ${used.size} 张。`);
+  refreshDaily();renderHistory();
+}
+function renderHistory(){
+  const all=getAllHistory();
+  document.getElementById('historyEmpty').style.display=all.length?'none':'block';
+  document.getElementById('historyList').innerHTML=all.map((rec,i)=>{
+    const tot=(rec.vocab?.length||0)+(rec.grammar?.length||0)+(rec.phrases?.length||0);
+    const id='hd'+i;let body='';
+    if(rec.vocab?.length){body+='<p class="sec" style="margin-top:0">生词</p>';rec.vocab.forEach(v=>{body+=`<div class="wcard" style="display:flex;align-items:center;gap:8px"><div class="flex1 row"><span style="font-size:13px;font-weight:500">${v.word}</span><span style="font-size:11px;color:#888">${v.pos}</span><button class="speak-btn" onclick="speakText('${esc(v.word)}',this)">▶</button></div><span style="font-size:12px;color:#888">${v.meaning}</span></div>`;});}
+    if(rec.phrases?.length){body+='<p class="sec">固定搭配</p>';rec.phrases.forEach(p=>{body+=`<div class="wcard" style="display:flex;align-items:center;gap:8px"><div class="flex1 row"><span style="font-size:13px;font-weight:500">${p.phrase}</span><button class="speak-btn" onclick="speakText('${esc(p.phrase)}',this)">▶</button></div><span style="font-size:12px;color:#888">${p.meaning}</span></div>`;});}
+    if(rec.grammar?.length){body+='<p class="sec">语法</p>';rec.grammar.forEach(g=>{body+=`<div class="wcard"><p style="font-size:13px;font-weight:500">${g.point}</p><p style="font-size:12px;color:#888">${g.explanation}</p></div>`;});}
+    return `<div class="hday"><div class="hday-h" onclick="document.getElementById('${id}').classList.toggle('open')"><div><span style="font-size:13px;font-weight:500;color:#111">${rec.date||'未知'}</span><span style="font-size:12px;color:#888;margin-left:8px">${tot} 条</span></div><span style="color:#ccc">▼</span></div><div class="hday-b" id="${id}">${body}</div></div>`;
+  }).join('');
+}
+
+// ── API ──
+async function callDoubao(dataUrl){
+  const resp=await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({model:MODEL,messages:[{role:'user',content:[{type:'image_url',image_url:{url:dataUrl}},{type:'text',text:SYS+'\n只返回JSON。'}]}],max_tokens:1500})
+  });
+  if(!resp.ok){let m='HTTP '+resp.status;try{const e=await resp.json();m=e.error?.message||m;}catch{}throw new Error(m);}
+  const data=await resp.json();
+  return parseAIJson(data.choices?.[0]?.message?.content||'');
+}
+function parseAIJson(raw){
+  if(!raw?.trim())throw new Error('AI返回空内容');
+  let txt=raw.replace(/```json\s*/gi,'').replace(/```/g,'').trim();
+  try{return JSON.parse(txt);}catch{}
+  const s=txt.indexOf('{'),e=txt.lastIndexOf('}');
+  if(s>=0&&e>s){
+    let sn=txt.slice(s,e+1);
+    try{return JSON.parse(sn);}catch{}
+    sn=sn.replace(/,(\s*[}\]])/g,'$1');
+    try{return JSON.parse(sn);}catch{}
+  }
+  throw new Error('JSON解析失败');
+}
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+function readFile(f){return new Promise(r=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.readAsDataURL(f);});}
+function deepCopy(o){return JSON.parse(JSON.stringify(o));}
+</script>
+</body>
+</html>
