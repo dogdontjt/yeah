@@ -85,7 +85,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <span style="font-size:20px">🎬</span>
       <h1 style="font-size:16px;font-weight:600;color:#111">drama</h1>
     </div>
-    <span id="todayLabel" style="font-size:11px;color:#aaa"></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="syncStatus" style="display:none;font-size:11px;color:#0066FF"></span>
+      <span id="todayLabel" style="font-size:11px;color:#aaa"></span>
+    </div>
   </div>
 
   <div id="ebbBar" style="display:none" class="ebb-bar">
@@ -276,6 +279,70 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 const MODEL='doubao-1.5-vision-pro-32k-250115';
 const EBB_DAYS=[1,2,4,7,15,30];
+
+// ── Supabase 配置 ──
+const SB_URL='https://djgsyavjmycpoacxojdr.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqZ3N5YXZqbXljcG9hY3hvamRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MjE0NjIsImV4cCI6MjA5NDQ5NzQ2Mn0.8R2fw7gsUymcVxtccNfPNFsYPVWSLEuXnM0bukPxdCI';
+const SB_TABLE='drama_data';
+// 用户唯一ID，首次自动生成并持久化
+function getUserId(){let id=localStorage.getItem('drama_uid');if(!id){id=crypto.randomUUID();localStorage.setItem('drama_uid',id);}return id;}
+const USER_ID=getUserId();
+
+async function sbFetch(method,body){
+  const headers={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'resolution=merge-duplicates'};
+  const url=`${SB_URL}/rest/v1/${SB_TABLE}`;
+  try{
+    const res=await fetch(method==='GET'?`${url}?user_id=eq.${USER_ID}&select=day_key,data`:url,{method,headers,body:body?JSON.stringify(body):undefined});
+    if(!res.ok)return null;
+    return method==='GET'?res.json():true;
+  }catch{return null;}
+}
+
+// 上传单天数据到云端（去掉 src 图片引用，图片不同步）
+async function syncDayUp(key){
+  const raw=localStorage.getItem(key);if(!raw)return;
+  try{
+    const r=JSON.parse(raw);
+    // 云端不存图片引用，避免跨设备 ID 失效
+    const clean={...r,vocab:(r.vocab||[]).map(v=>({...v,src:''})),phrases:(r.phrases||[]).map(p=>({...p,src:''}))};
+    await sbFetch('POST',{user_id:USER_ID,day_key:key,data:clean,updated_at:new Date().toISOString()});
+  }catch{}
+}
+
+// 启动时从云端拉取所有数据，合并到本地（本地有的不覆盖，只补充缺失的天）
+async function syncDown(){
+  showSyncStatus('同步中…');
+  const rows=await sbFetch('GET');
+  if(!rows||!rows.length){showSyncStatus('');return;}
+  let added=0;
+  for(const row of rows){
+    const k=row.day_key;
+    const local=localStorage.getItem(k);
+    if(!local){
+      // 本地没有这天，直接写入
+      try{localStorage.setItem(k,JSON.stringify(row.data));added++;}catch{}
+    } else {
+      // 本地有，合并：把云端有但本地没有的词补进来
+      try{
+        const loc=JSON.parse(local);const cld=row.data;let changed=false;
+        for(const v of(cld.vocab||[])){if(!loc.vocab.find(x=>x.word===v.word)){loc.vocab.push(v);changed=true;}}
+        for(const g of(cld.grammar||[])){if(!loc.grammar.find(x=>x.point===g.point)){loc.grammar.push(g);changed=true;}}
+        for(const p of(cld.phrases||[])){if(!loc.phrases.find(x=>x.phrase===p.phrase)){loc.phrases.push(p);changed=true;}}
+        if(changed){localStorage.setItem(k,JSON.stringify(loc));added++;}
+      }catch{}
+    }
+  }
+  if(added>0){daily=loadToday();refreshDaily();renderHistory();}
+  showSyncStatus('已同步 ☁️');
+  setTimeout(()=>showSyncStatus(''),3000);
+}
+
+function showSyncStatus(msg){
+  let el=document.getElementById('syncStatus');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.display=msg?'inline':'none';
+}
 const SYS=`你是英语学习助手，用户词汇量约4000词（高考水平）。分析美剧截图字幕，提取有价值的知识点。
 严格只返回如下JSON，不要任何其他文字或markdown：
 {"subtitle":"完整英文字幕原文，没有则为空","translation":"地道口语化中文翻译，像中文字幕组风格，不要逐字直译，没有字幕则为空","vocab":[{"word":"","pos":"","meaning":"","example":""}],"grammar":[{"point":"","explanation":"结合原句分析","original":"字幕原句","breakdown":"逐成分拆解"}],"phrases":[{"phrase":"","meaning":"","example":""}]}
@@ -311,7 +378,11 @@ function isDataUrl(s){return typeof s==='string'&&s.startsWith('data:');}
 const todayKey=()=>'day_'+new Date().toISOString().slice(0,10);
 function loadToday(){try{return JSON.parse(localStorage.getItem(todayKey()))||newDay();}catch{return newDay();}}
 function newDay(){return{vocab:[],grammar:[],phrases:[],date:todayKey().slice(4)};}
-function saveToday(){try{localStorage.setItem(todayKey(),JSON.stringify(daily));}catch(e){alert('存储空间不足，建议导出备份后清空旧数据。');}}
+function saveToday(){
+  const k=todayKey();
+  try{localStorage.setItem(k,JSON.stringify(daily));}catch(e){alert('存储空间不足，建议导出备份后清空旧数据。');}
+  syncDayUp(k);
+}
 let daily=loadToday();
 
 // 迁移旧版 base64 图片到 IndexedDB
@@ -349,10 +420,10 @@ window.addEventListener('DOMContentLoaded',()=>{
     const cb=wrap.querySelector('input[type=checkbox]');
     if(cb)cb.checked=!cb.checked;
   });
-  // 注册 Service Worker
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   }
+  syncDown();
 });
 
 function setRealMode(){
