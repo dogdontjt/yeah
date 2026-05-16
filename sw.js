@@ -14,7 +14,7 @@ self.addEventListener('activate',e=>{
 self.addEventListener('fetch',e=>{
   const url=e.request.url;
   // API 请求直接走网络
-  if(url.includes('volces.com')||url.includes('ark.cn'))return;
+  if(url.includes('volces.com')||url.includes('ark.cn')||url.includes('workers.dev'))return;
   e.respondWith(
     caches.match(e.request).then(cached=>{
       if(cached)return cached;

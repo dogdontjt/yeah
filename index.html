@@ -839,7 +839,7 @@ function renderHistory(){
 
 // ── API ──
 async function callDoubao(dataUrl){
-  const resp=await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions',{
+  const resp=await fetch('https://morning-mode-edcc.dogdontjt.workers.dev',{
     method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
     body:JSON.stringify({model:MODEL,messages:[{role:'user',content:[{type:'image_url',image_url:{url:dataUrl}},{type:'text',text:SYS+'\n只返回JSON。'}]}],max_tokens:1500})
   });
