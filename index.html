@@ -84,10 +84,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:20px">🎬</span>
       <h1 style="font-size:16px;font-weight:600;color:#111">drama</h1>
+      <span id="modeTagHeader" class="mode-tag mode-demo" style="cursor:default">演示</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span id="syncStatus" style="display:none;font-size:11px;color:#0066FF"></span>
       <span id="todayLabel" style="font-size:11px;color:#aaa"></span>
+      <button onclick="toggleSettings()" title="设置" style="background:none;border:1px solid #e0e0e0;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:15px;color:#666;line-height:1">⚙️</button>
     </div>
   </div>
 
@@ -96,36 +98,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div id="ebbChips"></div>
   </div>
 
-  <div class="key-box">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="row">
-        <p style="font-size:13px;font-weight:500;color:#111">豆包 API Key</p>
-        <span id="modeTag" class="mode-tag mode-demo">演示模式</span>
+  <!-- 折叠设置面板 -->
+  <div id="settingsPanel" style="display:none;border:1px solid #e5e5e5;border-radius:12px;padding:14px;margin-bottom:12px;background:#fafafa">
+    <div class="key-box" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="row">
+          <p style="font-size:13px;font-weight:500;color:#111">豆包 API Key</p>
+          <span id="modeTag" class="mode-tag mode-demo">演示模式</span>
+        </div>
+        <a href="https://console.volcengine.com/ark" target="_blank" style="font-size:11px;color:#0066FF">控制台 →</a>
       </div>
-      <a href="https://console.volcengine.com/ark" target="_blank" style="font-size:11px;color:#0066FF">控制台 →</a>
+      <div class="key-row">
+        <input type="password" id="keyInput" placeholder="ark-..." autocomplete="off">
+        <button onclick="saveKey()">保存</button>
+      </div>
+      <p style="font-size:11px;color:#888;margin-top:5px">模型：<code style="font-size:10px">doubao-1.5-vision-pro-32k-250115</code></p>
     </div>
-    <div class="key-row">
-      <input type="password" id="keyInput" placeholder="ark-..." autocomplete="off">
-      <button onclick="saveKey()">保存</button>
+    <div class="key-box" style="margin-bottom:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <p style="font-size:13px;font-weight:500;color:#111">同步用户名</p>
+        <span style="font-size:11px;color:#888">Mac 和手机填同一个名字</span>
+      </div>
+      <div id="uidSet" style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:12px;color:#555">当前：</span>
+        <span id="uidDisplay" style="font-size:12px;font-weight:500;color:#0066FF;flex:1"></span>
+        <button onclick="document.getElementById('uidSet').style.display='none';document.getElementById('uidEdit').style.display='flex'" style="font-size:11px;color:#888;background:none;border:1px solid #ddd;border-radius:6px;padding:3px 8px;cursor:pointer">修改</button>
+      </div>
+      <div id="uidEdit" style="display:none;align-items:center;gap:8px">
+        <input id="uidInput" type="text" placeholder="输入用户名，如 tom123" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid #ddd;font-size:13px">
+        <button onclick="saveUserId(document.getElementById('uidInput').value)" style="padding:7px 14px;border-radius:8px;background:#0066FF;border:none;color:#fff;font-size:12px;font-weight:500;cursor:pointer">保存</button>
+      </div>
+      <p style="font-size:11px;color:#aaa;margin-top:5px">⚠️ 不要用真实姓名，随便起一个只有你知道的名字</p>
     </div>
-    <p style="font-size:11px;color:#888;margin-top:5px">模型：<code style="font-size:10px">doubao-1.5-vision-pro-32k-250115</code></p>
-  </div>
-
-  <div class="key-box" style="margin-top:-4px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <p style="font-size:13px;font-weight:500;color:#111">同步用户名</p>
-      <span style="font-size:11px;color:#888">Mac 和手机填同一个名字</span>
-    </div>
-    <div id="uidSet" style="display:flex;align-items:center;gap:6px">
-      <span style="font-size:12px;color:#555">当前：</span>
-      <span id="uidDisplay" style="font-size:12px;font-weight:500;color:#0066FF;flex:1"></span>
-      <button onclick="document.getElementById('uidSet').style.display='none';document.getElementById('uidEdit').style.display='flex'" style="font-size:11px;color:#888;background:none;border:1px solid #ddd;border-radius:6px;padding:3px 8px;cursor:pointer">修改</button>
-    </div>
-    <div id="uidEdit" style="display:none;align-items:center;gap:8px">
-      <input id="uidInput" type="text" placeholder="输入用户名，如 tom123" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid #ddd;font-size:13px">
-      <button onclick="saveUserId(document.getElementById('uidInput').value)" style="padding:7px 14px;border-radius:8px;background:#0066FF;border:none;color:#fff;font-size:12px;font-weight:500;cursor:pointer">保存</button>
-    </div>
-    <p style="font-size:11px;color:#aaa;margin-top:5px">⚠️ 不要用真实姓名，随便起一个只有你知道的名字</p>
   </div>
 
   <div class="nav">
@@ -226,10 +230,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="flip-wrap" id="fc" onclick="doFlip()">
         <div class="flip-inner" id="fi2">
           <div class="flip-face">
-            <p style="font-size:11px;color:#888;margin-bottom:10px">点击翻转查看释义</p>
+            <p style="font-size:11px;color:#bbb;margin-bottom:10px">↓ 翻转 &nbsp;·&nbsp; ← 不熟 &nbsp;·&nbsp; → 掌握</p>
             <div class="row">
               <p style="font-size:28px;font-weight:500;color:#111" id="cWord"></p>
-              <button class="speak-btn" onclick="event.stopPropagation();speakText(document.getElementById('cWord').textContent,this)">▶</button>
+              <button class="speak-btn" onclick="event.stopPropagation();speakNatural(document.getElementById('cWord').textContent,this)">▶</button>
             </div>
             <p style="font-size:12px;color:#888;margin-top:8px;text-align:center;font-style:italic;max-width:280px;line-height:1.6" id="cCtx"></p>
             <button id="cSrcBtn" onclick="event.stopPropagation();showCardSrc()" style="display:none;margin-top:10px;background:transparent;border:1px solid #ddd;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;color:#888">📷 查看原图</button>
@@ -237,17 +241,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="flip-face flip-back">
             <p style="font-size:11px;color:#888;margin-bottom:4px" id="cPos"></p>
             <p style="font-size:20px;font-weight:500;color:#111;margin-bottom:6px;text-align:center" id="cMean"></p>
-            <div class="row" style="justify-content:center">
-              <p style="font-size:12px;color:#888;font-style:italic;text-align:center;line-height:1.6" id="cEx"></p>
-              <button class="speak-btn" onclick="event.stopPropagation();speakText(document.getElementById('cEx').textContent,this)">▶</button>
+            <div style="text-align:center;max-width:280px">
+              <div class="row" style="justify-content:center;margin-bottom:4px">
+                <p style="font-size:12px;color:#888;font-style:italic;text-align:center;line-height:1.6" id="cEx"></p>
+                <button class="speak-btn" onclick="event.stopPropagation();speakNatural(document.getElementById('cEx').textContent,this)">▶</button>
+              </div>
+              <p style="font-size:12px;color:#aaa;text-align:center;line-height:1.5;margin-top:2px" id="cExTrans"></p>
             </div>
           </div>
         </div>
       </div>
       <div id="rAct" style="display:none;margin-top:10px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button class="rbtn unk" onclick="mark(false)">还不熟</button>
-          <button class="rbtn know" onclick="mark(true)">已掌握</button>
+          <button class="rbtn unk" onclick="mark(false)">← 还不熟</button>
+          <button class="rbtn know" onclick="mark(true)">已掌握 →</button>
         </div>
       </div>
       <div id="rDone" style="display:none;text-align:center;padding:2rem">
@@ -256,6 +263,50 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="primary-btn" onclick="again()">重复不熟的词</button>
       </div>
     </div>
+
+    <!-- 洗脑模式 -->
+    <div id="brainwashPanel" style="display:none;margin-top:16px;border:1px solid #e0e0ff;border-radius:12px;padding:14px;background:#f7f7ff">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <p style="font-size:13px;font-weight:600;color:#5b4fcf">🧠 洗脑模式</p>
+        <button onclick="document.getElementById('brainwashPanel').style.display='none';stopBrainwash()" style="background:none;border:none;color:#aaa;font-size:16px;cursor:pointer">×</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:#666">速度</span>
+          <select id="bwRate" style="border:1px solid #ddd;border-radius:6px;padding:4px 6px;font-size:12px;background:#fff">
+            <option value="0.7">慢 0.7x</option>
+            <option value="0.9">正常 0.9x</option>
+            <option value="1.1" selected>稍快 1.1x</option>
+            <option value="1.3">快 1.3x</option>
+            <option value="1.5">很快 1.5x</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:#666">每词</span>
+          <select id="bwTimes" style="border:1px solid #ddd;border-radius:6px;padding:4px 6px;font-size:12px;background:#fff">
+            <option value="1">1 次</option>
+            <option value="2" selected>2 次</option>
+            <option value="3">3 次</option>
+            <option value="5">5 次</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:#666">间隔</span>
+          <select id="bwGap" style="border:1px solid #ddd;border-radius:6px;padding:4px 6px;font-size:12px;background:#fff">
+            <option value="600">0.6s</option>
+            <option value="1000" selected>1s</option>
+            <option value="1500">1.5s</option>
+            <option value="2000">2s</option>
+          </select>
+        </div>
+      </div>
+      <div id="bwStatus" style="font-size:12px;color:#888;min-height:18px;margin-bottom:8px;text-align:center"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="startBrainwash()" style="padding:9px;border-radius:8px;background:#5b4fcf;border:none;color:#fff;font-size:13px;font-weight:500;cursor:pointer">▶ 开始</button>
+        <button onclick="stopBrainwash()" style="padding:9px;border-radius:8px;background:transparent;border:1px solid #ccc;color:#666;font-size:13px;cursor:pointer">■ 停止</button>
+      </div>
+    </div>
+    <button id="bwToggleBtn" onclick="toggleBrainwash()" style="display:none;margin-top:10px;width:100%;padding:9px;border-radius:8px;background:transparent;border:1px dashed #b0a0ef;color:#5b4fcf;font-size:13px;font-weight:500;cursor:pointer">🧠 洗脑模式</button>
   </div>
 
   <!-- 单词本 -->
@@ -389,10 +440,10 @@ function showSyncStatus(msg){
 }
 const SYS=`你是英语学习助手，用户词汇量约4000词（高考水平）。分析美剧截图字幕，提取有价值的知识点。
 严格只返回如下JSON，不要任何其他文字或markdown：
-{"subtitle":"完整英文字幕原文，没有则为空","translation":"地道口语化中文翻译，像中文字幕组风格，不要逐字直译，没有字幕则为空","vocab":[{"word":"","pos":"","meaning":"","example":""}],"grammar":[{"point":"","explanation":"结合原句分析","original":"字幕原句","breakdown":"逐成分拆解"}],"phrases":[{"phrase":"","meaning":"","example":""}]}
-规则：1.vocab只提词汇量4000以上才遇到的词，跳过基础词 2.grammar必须引用原句分析时态/语态/句式 3.无字幕则各数组为空 4.vocab最多3个grammar最多2个phrases最多2个`;
+{"subtitle":"完整英文字幕原文，没有则为空","translation":"地道口语化中文翻译，像中文字幕组风格，不要逐字直译，没有字幕则为空","vocab":[{"word":"","pos":"","meaning":"","example":"","exampleTrans":"例句的地道中文翻译"}],"grammar":[{"point":"","explanation":"结合原句分析","original":"字幕原句","breakdown":"逐成分拆解"}],"phrases":[{"phrase":"","meaning":"","example":"","exampleTrans":"例句的地道中文翻译"}]}
+规则：1.vocab只提词汇量4000以上才遇到的词，跳过基础词 2.grammar必须引用原句分析时态/语态/句式 3.无字幕则各数组为空 4.vocab最多3个grammar最多2个phrases最多2个 5.exampleTrans必须填写，口语化中文翻译`;
 
-const MOCK={subtitle:"But he sends me a card, without fail, every single birthday.",translation:"但他每年我生日都会寄卡片来，一次都没落下过。",vocab:[{word:"without fail",pos:"adv.",meaning:"必定，从不例外",example:"He sends me a card, without fail, every single birthday."}],grammar:[{point:"插入语强调",explanation:"'without fail'作插入语夹在句中，强调动作的必然性",original:"But he sends me a card, without fail, every single birthday.",breakdown:"he sends me a card（主句）/ without fail（插入语）/ every single birthday（时间状语，single加强语气）"}],phrases:[{phrase:"without fail",meaning:"必定，从不例外",example:"He calls me every week, without fail."},{phrase:"every single",meaning:"每一个（强调无一例外）",example:"Every single day, she practices."}]};
+const MOCK={subtitle:"But he sends me a card, without fail, every single birthday.",translation:"但他每年我生日都会寄卡片来，一次都没落下过。",vocab:[{word:"without fail",pos:"adv.",meaning:"必定，从不例外",example:"He sends me a card, without fail, every single birthday.",exampleTrans:"他每年我生日必定会寄卡片来，一次都没落下。"}],grammar:[{point:"插入语强调",explanation:"'without fail'作插入语夹在句中，强调动作的必然性",original:"But he sends me a card, without fail, every single birthday.",breakdown:"he sends me a card（主句）/ without fail（插入语）/ every single birthday（时间状语，single加强语气）"}],phrases:[{phrase:"without fail",meaning:"必定，从不例外",example:"He calls me every week, without fail.",exampleTrans:"他每周都会给我打电话，从不例外。"},{phrase:"every single",meaning:"每一个（强调无一例外）",example:"Every single day, she practices.",exampleTrans:"她每天都在练习，一天都没落下。"}]};
 
 let apiKey=localStorage.getItem('doubao_key')||'';
 let currentUtter=null,flipped=false;
@@ -479,11 +530,19 @@ window.addEventListener('DOMContentLoaded',()=>{
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   }
   syncDown();
+  // 预加载voices
+  if(window.speechSynthesis){window.speechSynthesis.getVoices();}
 });
 
+function toggleSettings(){
+  const p=document.getElementById('settingsPanel');
+  p.style.display=p.style.display==='none'?'block':'none';
+}
 function setRealMode(){
   document.getElementById('modeTag').textContent='真实模式';
   document.getElementById('modeTag').className='mode-tag mode-real';
+  document.getElementById('modeTagHeader').textContent='真实';
+  document.getElementById('modeTagHeader').className='mode-tag mode-real';
   document.getElementById('keyInput').placeholder='Key已保存（可更新）';
 }
 function saveKey(){
@@ -521,16 +580,41 @@ async function openModal(src,label=''){
 }
 function closeModal(){document.getElementById('imgModal').classList.remove('open');}
 
-// ── 语音 ──
-function speakText(text,btn){
+// ── 语音（真人TTS，优先Google TTS，降级Web Speech）──
+let _voices=[];
+function loadVoices(){_voices=window.speechSynthesis.getVoices();}
+window.speechSynthesis.onvoiceschanged=loadVoices;loadVoices();
+
+function getBestVoice(){
+  const prefer=['Google US English','Google UK English Female','Microsoft Aria Online (Natural)','Microsoft Jenny Online (Natural)','Samantha'];
+  for(const name of prefer){const v=_voices.find(x=>x.name===name);if(v)return v;}
+  return _voices.find(x=>x.lang.startsWith('en')&&x.localService===false)||_voices.find(x=>x.lang.startsWith('en'))||null;
+}
+
+// Google TTS（免费，无需key，限制较宽松）
+async function speakViaGoogleTTS(text,rate){
+  try{
+    const enc=encodeURIComponent(text);
+    const url=`https://translate.google.com/translate_tts?ie=UTF-8&q=${enc}&tl=en&client=tw-ob&ttsspeed=${rate||1}`;
+    const audio=new Audio(url);audio.crossOrigin='anonymous';
+    await new Promise((res,rej)=>{audio.onended=res;audio.onerror=rej;audio.play();});
+    return true;
+  }catch{return false;}
+}
+
+function speakNatural(text,btn,rate){
   if(!text?.trim())return;
   window.speechSynthesis.cancel();
-  if(currentUtter&&btn.classList.contains('playing')){btn.classList.remove('playing');currentUtter=null;return;}
+  if(btn&&currentUtter&&btn.classList.contains('playing')){btn.classList.remove('playing');currentUtter=null;return;}
   document.querySelectorAll('.speak-btn.playing').forEach(b=>b.classList.remove('playing'));
-  const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=0.88;
-  u.onend=u.onerror=()=>{btn.classList.remove('playing');currentUtter=null;};
-  currentUtter=u;btn.classList.add('playing');window.speechSynthesis.speak(u);
+  if(btn)btn.classList.add('playing');
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';u.rate=rate||0.9;
+  const voice=getBestVoice();if(voice)u.voice=voice;
+  u.onend=u.onerror=()=>{if(btn)btn.classList.remove('playing');currentUtter=null;};
+  currentUtter=u;window.speechSynthesis.speak(u);
 }
+function speakText(text,btn){speakNatural(text,btn);}  // 兼容旧调用
 
 // ── 上传队列 ──
 function handleFiles(e){const files=[...e.target.files];if(files.length)addToQueue(files);e.target.value='';}
@@ -719,13 +803,14 @@ function refreshDaily(){
 
 // ── 闪卡 ──
 function startReview(){
-  cards=[...daily.vocab.map(v=>({front:v.word,back:v.meaning,pos:v.pos,ex:v.example||'',src:v.src||''})),...daily.phrases.map(p=>({front:p.phrase,back:p.meaning,pos:'固定搭配',ex:p.example||'',src:p.src||''}))].sort(()=>Math.random()-.5);
+  cards=[...daily.vocab.map(v=>({front:v.word,back:v.meaning,pos:v.pos,ex:v.example||'',exTrans:v.exampleTrans||'',src:v.src||''})),...daily.phrases.map(p=>({front:p.phrase,back:p.meaning,pos:'固定搭配',ex:p.example||'',exTrans:p.exampleTrans||'',src:p.src||''}))].sort(()=>Math.random()-.5);
   if(!cards.length)return;
   idx=0;knows=new Set();unks=new Set();flipped=false;
   ['rEmpty','rDone'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('rMain').style.display='block';
   document.getElementById('fc').style.display='block';
   document.getElementById('rAct').style.display='none';
+  document.getElementById('bwToggleBtn').style.display='block';
   go('review');showCard();
 }
 function showCard(){
@@ -736,6 +821,7 @@ function showCard(){
   document.getElementById('cPos').textContent=c.pos;
   document.getElementById('cMean').textContent=c.back;
   document.getElementById('cEx').textContent=c.ex;
+  document.getElementById('cExTrans').textContent=c.exTrans||'';
   document.getElementById('cSrcBtn').style.display=c.src?'inline-flex':'none';
   document.getElementById('fi2').classList.remove('flipped');
   document.getElementById('rAct').style.display='none';
@@ -746,6 +832,65 @@ function showCard(){
   document.getElementById('rKnow').textContent='已掌握 '+knows.size;
   document.getElementById('rUnk').textContent='待复习 '+unks.size;
 }
+
+// 键盘快捷键
+document.addEventListener('keydown',e=>{
+  const tab=document.querySelector('.tab-btn.active')?.textContent;
+  if(!['闪卡复习'].includes(tab)&&tab!==undefined){
+    // 仅在闪卡复习 tab 激活时
+    const reviewVisible=document.getElementById('t-review').style.display!=='none';
+    if(!reviewVisible)return;
+  }
+  const reviewVisible=document.getElementById('t-review')?.style.display!=='none';
+  if(!reviewVisible)return;
+  if(document.getElementById('rMain')?.style.display==='none')return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();doFlip();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();if(flipped)mark(false);}
+  else if(e.key==='ArrowRight'){e.preventDefault();if(flipped)mark(true);}
+});
+
+// ── 洗脑模式 ──
+let bwTimer=null,bwRunning=false;
+function toggleBrainwash(){
+  const p=document.getElementById('brainwashPanel');
+  p.style.display=p.style.display==='none'?'block':'none';
+}
+function stopBrainwash(){
+  bwRunning=false;clearTimeout(bwTimer);window.speechSynthesis.cancel();
+  document.getElementById('bwStatus').textContent='';
+}
+async function startBrainwash(){
+  stopBrainwash();
+  if(!cards.length){alert('没有词卡，先开始复习吧');return;}
+  const rate=parseFloat(document.getElementById('bwRate').value);
+  const times=parseInt(document.getElementById('bwTimes').value);
+  const gap=parseInt(document.getElementById('bwGap').value);
+  bwRunning=true;
+  for(let i=0;i<cards.length&&bwRunning;i++){
+    const c=cards[i];
+    document.getElementById('bwStatus').textContent=`(${i+1}/${cards.length}) ${c.front} — ${c.back}`;
+    for(let t=0;t<times&&bwRunning;t++){
+      await speakAndWait(c.front,rate);
+      if(!bwRunning)break;
+      await sleep(350);
+      await speakAndWait(c.back,rate);
+      if(!bwRunning)break;
+      if(t<times-1)await sleep(gap*0.6);
+    }
+    if(bwRunning)await sleep(gap);
+  }
+  if(bwRunning){document.getElementById('bwStatus').textContent='✅ 播放完毕';bwRunning=false;}
+}
+function speakAndWait(text,rate){
+  return new Promise(res=>{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=rate||1;
+    const voice=getBestVoice();if(voice)u.voice=voice;
+    u.onend=u.onerror=()=>res();
+    window.speechSynthesis.speak(u);
+  });
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function showCardSrc(){const c=cards[idx];if(c?.src)openModal(c.src,c.front+' 来源截图');}
 function doFlip(){if(flipped)return;document.getElementById('fi2').classList.add('flipped');document.getElementById('rAct').style.display='block';flipped=true;}
 function mark(k){
@@ -783,13 +928,14 @@ function checkEbb(){
 function startEbbReview(key){
   try{
     const r=JSON.parse(localStorage.getItem(key));
-    cards=[...(r.vocab||[]).map(v=>({front:v.word,back:v.meaning,pos:v.pos,ex:v.example||'',src:v.src||''})),...(r.phrases||[]).map(p=>({front:p.phrase,back:p.meaning,pos:'固定搭配',ex:p.example||'',src:p.src||''}))].sort(()=>Math.random()-.5);
+    cards=[...(r.vocab||[]).map(v=>({front:v.word,back:v.meaning,pos:v.pos,ex:v.example||'',exTrans:v.exampleTrans||'',src:v.src||''})),...(r.phrases||[]).map(p=>({front:p.phrase,back:p.meaning,pos:'固定搭配',ex:p.example||'',exTrans:p.exampleTrans||'',src:p.src||''}))].sort(()=>Math.random()-.5);
     if(!cards.length)return;
     idx=0;knows=new Set();unks=new Set();flipped=false;
     ['rEmpty','rDone'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('rMain').style.display='block';
     document.getElementById('fc').style.display='block';
     document.getElementById('rAct').style.display='none';
+    document.getElementById('bwToggleBtn').style.display='block';
     go('review');showCard();
   }catch{alert('加载失败');}
 }
